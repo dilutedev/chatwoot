@@ -10,10 +10,11 @@ export default {
     return {
       socialMediaLinks: [
         { key: 'facebook', icon: 'facebook', link: 'https://facebook.com/' },
-        { key: 'twitter', icon: 'twitter', link: 'https://twitter.com/' },
+        { key: 'twitter', icon: 'x', link: 'https://x.com/' },
         { key: 'linkedin', icon: 'linkedin', link: 'https://linkedin.com/' },
         { key: 'github', icon: 'github', link: 'https://github.com/' },
         { key: 'instagram', icon: 'instagram', link: 'https://instagram.com/' },
+        { key: 'line', icon: 'line', link: 'https://line.me/' },
         { key: 'telegram', icon: 'telegram', link: 'https://t.me/' },
       ],
     };
