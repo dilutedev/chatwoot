@@ -26,6 +26,32 @@ const [showActionsDropdown, toggleDropdown] = useToggle(false);
 
 const currentChat = computed(() => store.getters.getSelectedChat);
 
+const translateMessagesInBatches = async (messages, conversationId, locale) => {
+  const BATCH_SIZE = 5;
+  const untranslatedMessages = messages.filter(
+    message =>
+      message.content &&
+      !message.content_attributes?.translations?.[locale] &&
+      message.message_type !== 2
+  );
+
+  // Process batches sequentially to avoid overwhelming the server
+  // eslint-disable-next-line no-await-in-loop
+  for (let i = 0; i < untranslatedMessages.length; i += BATCH_SIZE) {
+    const batch = untranslatedMessages.slice(i, i + BATCH_SIZE);
+    // eslint-disable-next-line no-await-in-loop
+    await Promise.all(
+      batch.map(message =>
+        store.dispatch('translateMessage', {
+          conversationId,
+          messageId: message.id,
+          targetLanguage: locale,
+        })
+      )
+    );
+  }
+};
+
 const handleTranslateAllToggle = async () => {
   translateAll.value = !translateAll.value;
 
@@ -34,23 +60,14 @@ const handleTranslateAllToggle = async () => {
     const { locale } = store.getters['accounts/getAccount'](
       store.getters.getCurrentAccountId
     );
+    const targetLocale = locale || 'en';
 
-    messages.forEach(message => {
-      if (
-        message.content &&
-        !message.content_attributes?.translations &&
-        message.message_type !== 2
-      ) {
-        store.dispatch('translateMessage', {
-          conversationId: currentChat.value.id,
-          messageId: message.id,
-          targetLanguage: locale || 'en',
-        });
-      }
-    });
+    emitter.emit('TRANSLATE_ALL_TOGGLED', translateAll.value);
+
+    translateMessagesInBatches(messages, currentChat.value.id, targetLocale);
+  } else {
+    emitter.emit('TRANSLATE_ALL_TOGGLED', translateAll.value);
   }
-
-  emitter.emit('TRANSLATE_ALL_TOGGLED', translateAll.value);
 };
 
 const actionMenuItems = computed(() => {
