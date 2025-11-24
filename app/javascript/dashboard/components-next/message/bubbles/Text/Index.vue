@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, ref, onMounted, onUnmounted } from 'vue';
 import BaseBubble from 'next/message/bubbles/Base.vue';
 import FormattedContent from './FormattedContent.vue';
 import AttachmentChips from 'next/message/chips/AttachmentChips.vue';
@@ -7,6 +7,7 @@ import TranslationToggle from 'dashboard/components-next/message/TranslationTogg
 import { MESSAGE_TYPES } from '../../constants';
 import { useMessageContext } from '../../provider.js';
 import { useTranslations } from 'dashboard/composables/useTranslations';
+import { emitter } from 'shared/helpers/mitt';
 
 const { content, attachments, contentAttributes, messageType } =
   useMessageContext();
@@ -15,13 +16,17 @@ const { hasTranslations, translationContent } =
   useTranslations(contentAttributes);
 
 const renderOriginal = ref(false);
+const translateAllEnabled = ref(false);
 
 const renderContent = computed(() => {
   if (renderOriginal.value) {
     return content.value;
   }
 
-  if (hasTranslations.value) {
+  if (
+    hasTranslations.value &&
+    (renderOriginal.value === false || translateAllEnabled.value)
+  ) {
     return translationContent.value;
   }
 
@@ -39,6 +44,21 @@ const isEmpty = computed(() => {
 const handleSeeOriginal = () => {
   renderOriginal.value = !renderOriginal.value;
 };
+
+const handleTranslateAllToggle = enabled => {
+  translateAllEnabled.value = enabled;
+  if (enabled && hasTranslations.value) {
+    renderOriginal.value = false;
+  }
+};
+
+onMounted(() => {
+  emitter.on('TRANSLATE_ALL_TOGGLED', handleTranslateAllToggle);
+});
+
+onUnmounted(() => {
+  emitter.off('TRANSLATE_ALL_TOGGLED', handleTranslateAllToggle);
+});
 </script>
 
 <template>

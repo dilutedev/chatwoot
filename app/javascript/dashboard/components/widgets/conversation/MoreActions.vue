@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onUnmounted } from 'vue';
+import { computed, onUnmounted, ref } from 'vue';
 import { useToggle } from '@vueuse/core';
 import { useStore } from 'vuex';
 import { useAlert } from 'dashboard/composables';
@@ -19,11 +19,39 @@ import {
 // No props needed as we're getting currentChat from the store directly
 const store = useStore();
 const { t } = useI18n();
+const translateAll = ref(false);
 
 const [showEmailActionsModal, toggleEmailModal] = useToggle(false);
 const [showActionsDropdown, toggleDropdown] = useToggle(false);
 
 const currentChat = computed(() => store.getters.getSelectedChat);
+
+const handleTranslateAllToggle = async () => {
+  translateAll.value = !translateAll.value;
+
+  if (translateAll.value) {
+    const messages = store.getters.getAllMessagesInActiveChat;
+    const { locale } = store.getters['accounts/getAccount'](
+      store.getters.getCurrentAccountId
+    );
+
+    messages.forEach(message => {
+      if (
+        message.content &&
+        !message.content_attributes?.translations &&
+        message.message_type !== 2
+      ) {
+        store.dispatch('translateMessage', {
+          conversationId: currentChat.value.id,
+          messageId: message.id,
+          targetLanguage: locale || 'en',
+        });
+      }
+    });
+  }
+
+  emitter.emit('TRANSLATE_ALL_TOGGLED', translateAll.value);
+};
 
 const actionMenuItems = computed(() => {
   const items = [];
@@ -51,10 +79,24 @@ const actionMenuItems = computed(() => {
     value: 'send_transcript',
   });
 
+  items.push({
+    icon: 'i-lucide-languages',
+    label: t('CONTACT_PANEL.TRANSLATE_ALL'),
+    action: 'translate_all_toggle',
+    value: 'translate_all_toggle',
+    component: 'switch',
+    checked: translateAll.value,
+  });
+
   return items;
 });
 
 const handleActionClick = ({ action }) => {
+  if (action === 'translate_all_toggle') {
+    handleTranslateAllToggle();
+    return;
+  }
+
   toggleDropdown(false);
 
   if (action === 'mute') {

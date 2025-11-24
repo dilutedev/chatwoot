@@ -50,6 +50,7 @@
     "MUTED_SUCCESS": "This contact is blocked successfully. You will not be notified of any future conversations.",
     "UNMUTED_SUCCESS": "This contact is unblocked successfully.",
     "SEND_TRANSCRIPT": "Send Transcript",
+    "TRANSLATE_ALL": "Translate All",
     "EDIT_LABEL": "Edit",
     "SIDEBAR_SECTIONS": {
       "CUSTOM_ATTRIBUTES": "Custom Attributes",

@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n';
 
 import Icon from 'dashboard/components-next/icon/Icon.vue';
 import Avatar from 'dashboard/components-next/avatar/Avatar.vue';
+import Switch from 'dashboard/components-next/switch/Switch.vue';
 
 const props = defineProps({
   menuItems: {
@@ -192,37 +193,47 @@ onMounted(() => {
         v-for="(item, index) in filteredMenuItems"
         :key="index"
         type="button"
-        class="inline-flex items-center justify-start w-full h-8 min-w-0 gap-2 px-2 py-1.5 transition-all duration-200 ease-in-out border-0 rounded-lg z-60 hover:bg-n-alpha-1 dark:hover:bg-n-alpha-2 disabled:cursor-not-allowed disabled:pointer-events-none disabled:opacity-50"
+        class="inline-flex items-center w-full h-8 min-w-0 gap-2 px-2 py-1.5 transition-all duration-200 ease-in-out border-0 rounded-lg z-60 hover:bg-n-alpha-1 dark:hover:bg-n-alpha-2 disabled:cursor-not-allowed disabled:pointer-events-none disabled:opacity-50"
         :class="{
           'bg-n-alpha-1 dark:bg-n-solid-active': item.isSelected,
           'text-n-ruby-11': item.action === 'delete',
           'text-n-slate-12': item.action !== 'delete',
+          'justify-between': item.component === 'switch',
+          'justify-start': item.component !== 'switch',
         }"
         :disabled="item.disabled"
         @click="handleAction(item)"
       >
-        <slot name="thumbnail" :item="item">
-          <Avatar
-            v-if="item.thumbnail"
-            :name="item.thumbnail.name"
-            :src="item.thumbnail.src"
-            :size="thumbnailSize"
-            rounded-full
+        <div class="inline-flex items-center gap-2 min-w-0">
+          <slot name="thumbnail" :item="item">
+            <Avatar
+              v-if="item.thumbnail"
+              :name="item.thumbnail.name"
+              :src="item.thumbnail.src"
+              :size="thumbnailSize"
+              rounded-full
+            />
+          </slot>
+          <Icon
+            v-if="item.icon"
+            :icon="item.icon"
+            class="flex-shrink-0 size-3.5"
           />
-        </slot>
-        <Icon
-          v-if="item.icon"
-          :icon="item.icon"
-          class="flex-shrink-0 size-3.5"
+          <span v-if="item.emoji" class="flex-shrink-0">{{ item.emoji }}</span>
+          <span
+            v-if="item.label"
+            class="min-w-0 text-sm truncate"
+            :class="labelClass"
+          >
+            {{ item.label }}
+          </span>
+        </div>
+        <Switch
+          v-if="item.component === 'switch'"
+          :model-value="item.checked"
+          size="sm"
+          @click.stop
         />
-        <span v-if="item.emoji" class="flex-shrink-0">{{ item.emoji }}</span>
-        <span
-          v-if="item.label"
-          class="min-w-0 text-sm truncate"
-          :class="labelClass"
-        >
-          {{ item.label }}
-        </span>
       </button>
     </template>
     <div
